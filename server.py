@@ -3,8 +3,8 @@
 import os
 import sys
 import json
-from time import localtime
-from time import strftime
+#from time import time.localtime, time.strftime, tzset, tzname
+import time
 import requests
 from geopy.geocoders import Nominatim
 from flask import Flask
@@ -24,6 +24,8 @@ def get_weather():
   url = '{}/{}/{}'.format(DARK_SKY['api_url'], key, gps)
   r = requests.get(url)
   return(r.json())
+  # with open('sample.json') as fh:
+  #   return(json.load(fh))
 
 def compass(bearing):
   coords = {
@@ -45,19 +47,18 @@ def location(coords):
   geolocator = Nominatim(user_agent="thecase/nook-weather")
   return(geolocator.reverse(str(coords)).address)
 
-app = Flask(__name__)
-@app.route('/')
-def index():
-  """ index page function. """
-  # with open('sample.json') as fh:
-  #   data = json.load(fh)
+def format_time(tz, format, utime):
+  os.environ['TZ'] = tz
+  time.tzset()
+  return time.strftime(format, time.localtime(utime))
+
+def process_data():
   data = get_weather()
-  #
-  os.environ['TZ'] = data['timezone']
+  tz = data['timezone']
   unixtime = data['currently']['time']
   now = data['currently']
-  now['time'] = strftime('%A, %B %d %Y', localtime(unixtime))
-  now['timestamp'] = strftime('%Y-%m-%d %H:%M:%S', localtime(unixtime))
+  now['time'] = format_time(tz, '%A, %B %d %Y', unixtime)
+  now['timestamp'] = format_time(tz, '%Y-%m-%d %H:%M:%S', unixtime)
   # only available when all stations are reporing
   # now['hour'] = data['minutely']['summary']
   now['day'] =  data['hourly']['summary']
@@ -70,27 +71,35 @@ def index():
   hourly = list()
   for i in [2, 4, 6, 8, 10, 12]:
     forecast = data['hourly']['data'][i]
-    time = strftime('%-I %p', localtime(int(forecast['time'])))
+    time = format_time(tz, '%-I %p', int(forecast['time']))
     hourly.append({"time": time, "icon": forecast['icon'],
                    "temp": forecast['temperature']})
-
 
   daily = list()
   for i in range(6):
     forecast = data['daily']['data'][i]
-    date = strftime('%m/%d', localtime(int(forecast['time'])))
-    day  = strftime('%A', localtime(int(forecast['time'])))
+    date = format_time(tz, '%m/%d', int(forecast['time']))
+    day  = format_time(tz, '%A', int(forecast['time']))
     daily.append(
         {"day": day, "date": date, "icon": forecast['icon'],
          "high": forecast['temperatureHigh'],
          "low":  forecast['temperatureLow']
         })
+  return({'now': now, 'hourly': hourly, 'daily': daily})
 
-  return render_template('index.html', now=now, hourly=hourly, daily=daily, ds=DARK_SKY)
+
+app = Flask(__name__)
+@app.route('/')
+def index():
+  """ index page function. """
+  global DARK_SKY
+  pd = process_data()
+  return render_template('index.html', now=pd['now'], hourly=pd['hourly']
+                                     , daily=pd['daily'], ds=DARK_SKY)
 
 
 if __name__ == '__main__':
   if 'DARKSKY_API_KEY' not in os.environ:
-    print("ERROR Please set the environment variable DARKSK_API_KEY")  
+    print("ERROR Please set the environment variable DARKSK_API_KEY")
     sys.exit(1)
   app.run(debug=True, host='0.0.0.0', port=int(os.environ['BIND_PORT']))
