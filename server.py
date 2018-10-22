@@ -1,3 +1,4 @@
+macmini:nook-weather-new bryan$ cat server.py 
 #!/usr/bin/env python
 
 import os
@@ -103,3 +104,4 @@ if __name__ == '__main__':
     print("ERROR Please set the environment variable DARKSK_API_KEY")
     sys.exit(1)
   app.run(debug=True, host='0.0.0.0', port=int(os.environ['BIND_PORT']))
+macmini:nook-weather-new bryan$ 
