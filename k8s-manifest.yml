@@ -4,17 +4,15 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: nook-weather
-  labels:
-    component: nook-weather
 spec:
   replicas: 1
   selector:
     matchLabels:
-     component: nook-weather
+     app: nook-weather
   template:
     metadata:
       labels:
-        component: nook-weather
+        app: nook-weather
     spec:
       containers:
       - name: nook-weather
@@ -48,25 +46,27 @@ metadata:
   labels:
     component: nook-weather
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
-    component: nook-weather
+    app: nook-weather
   ports:
   - name: http
     port: 8080
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: nook-weather-ingress
-  annotations:
-    kubernetes.io/ingress.class: traefik
-spec:
-  rules:
-  - host: nook-weather.svc
-    http:
-      paths:
-#      - path: /
-      - backend:
-          serviceName: nook-weather
-          servicePort: 8080
+    protocol: TCP
+    targetPort: 8080
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  name: nook-weather-ingress
+#  annotations:
+#    kubernetes.io/ingress.class: traefik
+#spec:
+#  rules:
+#  - host: nook-weather.svc
+#    http:
+#      paths:
+##      - path: /
+#      - backend:
+#          serviceName: nook-weather
+#          servicePort: 8080
