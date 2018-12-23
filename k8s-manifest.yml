@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nook-weather
-        image: thecase/nook-weather:1.0.0
+        image: thecase/nook-weather:1.0
         env:
         - name: BIND_PORT
           value: "8080"
@@ -51,7 +51,7 @@ spec:
     app: nook-weather
   ports:
   - name: http
-    port: 8080
+    port: 80
     protocol: TCP
     targetPort: 8080
 #---
