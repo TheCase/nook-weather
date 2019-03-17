@@ -21,7 +21,9 @@ def get_weather():
   global DARK_SKY
   key = str(os.environ['DARKSKY_API_KEY'])
   gps = str(os.environ['GPS_COORDINATES'])
-  url = '{}/{}/{}'.format(DARK_SKY['api_url'], key, gps)
+  units = str(os.environ['DARKSKY_API_UNITS'])
+  lang = str(os.environ['DARKSKY_API_LANG'])
+  url = '{}/{}/{}?units={}&lang={}'.format(DARK_SKY['api_url'], key, gps,units,lang)
   r = requests.get(url)
   return(r.json())
   # with open('sample.json') as fh:
