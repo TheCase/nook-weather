@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.11-rc-slim-bullseye
 #-alpine
 
 RUN pip install requests flask geopy
